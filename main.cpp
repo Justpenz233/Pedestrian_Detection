@@ -20,7 +20,6 @@ using namespace std;
 using namespace cv;
 
 
-
 double MinPeopelArea = 0;
 double MaxPeopleArea = 10000;
 
@@ -33,12 +32,10 @@ string MakePath(const string s){
 }
 
 void NextFram(VideoCapture &cap,double Sec){
-    
     for(int i = 1;i <= Sec * 30;i ++){
         Mat fram;
         cap >> fram;
     }
-    
 }
 
 int main() {
@@ -51,7 +48,7 @@ int main() {
     auto fgmask = createBackgroundSubtractorMOG2(100);
     
     Mat frame;
-    while (1) {
+    while (cap.isOpened()) {
         NextFram(cap, 0.05);//每0.1秒处理一次
         
         cap >> frame;
@@ -89,23 +86,42 @@ int main() {
         
         
         Mat GrayWithBorder;
+        //inRange(gray, Scalar(0, 60, 32), Scalar(180, 255, 255), gray);
         drawContours(frame, Contours, -1, Scalar(255 ,255, 255));
-        
-        for (int i = 0;i < Contours.size();i ++){
-            const vector<Point> t = Contours[i];
-            double tArea = contourArea(t);
-            if(tArea < MinPeopelArea and tArea > MaxPeopleArea)
-                continue;
-            DetectedContours.push_back(boundingRect(t));
-        }
 
-        for (int i = 0;i < DetectedPeople.size();i ++){
-            
-        }
+         for (const auto& t : Contours){
+             double tArea = contourArea(t);
+             if(tArea < MinPeopelArea and tArea > MaxPeopleArea)
+                 continue;
+             DetectedContours.push_back(boundingRect(t));
 
+         }
 
+         for (People i : DetectedPeople){
+             Rect trackedWindows = i.getPos();
+             Mat roi, hsv_roi, mask, roi_hist;
+             hsv_roi = gray(trackedWindows);
+             inRange(hsv_roi, Scalar(0, 60, 32), Scalar(180, 255, 255), mask);
+             //bitwise_not(mask,mask);
 
-        imshow("Exameple2", frame);
+             int histSize[] = {180};
+             int channels[] = {0};
+
+             float range_[] = {0, 180};
+             const float* range[] = {range_};
+             calcHist(&hsv_roi, 1, channels, mask, roi_hist, 1, histSize, range);
+             normalize(roi_hist, roi_hist, 0, 255, NORM_MINMAX);
+             TermCriteria term_crit(TermCriteria::EPS | TermCriteria::COUNT, 10, 1);
+             for(int j = 0;j < DetectedContours.size();j ++){
+
+             }
+         }
+
+         for (const auto& tCon : DetectedContours){
+             DetectedPeople.emplace_back(People(tCon));
+         }
+
+        imshow("DEMO", frame);
         
         
         //while ((char)waitKey(1000) != 'q') break;
@@ -114,6 +130,4 @@ int main() {
     }
 
       return 0;
-    
-    
 }
