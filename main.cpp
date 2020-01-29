@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include <list>
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
@@ -23,10 +24,9 @@ using namespace cv;
 double MinPeopelArea = 0;
 double MaxPeopleArea = 10000;
 
-vector <Rect> DetectedContours;
-vector <People> DetectedPeople;
+list <Rect> DetectedContours;
+list <People> DetectedPeople;
 
-vector<int> test;
 string MakePath(const string s){
     return CurrentPath + s;
 }
@@ -39,7 +39,9 @@ void NextFram(VideoCapture &cap,double Sec){
 }
 
 int main() {
-    
+
+
+
     namedWindow("Example2", WINDOW_AUTOSIZE);
     
     VideoCapture cap;
@@ -48,6 +50,7 @@ int main() {
     auto fgmask = createBackgroundSubtractorMOG2(100);
     
     Mat frame;
+
     while (cap.isOpened()) {
         NextFram(cap, 0.05);//每0.1秒处理一次
         
@@ -87,7 +90,7 @@ int main() {
         
         Mat GrayWithBorder;
         //inRange(gray, Scalar(0, 60, 32), Scalar(180, 255, 255), gray);
-        drawContours(frame, Contours, -1, Scalar(255 ,255, 255));
+        //drawContours(frame, Contours, -1, Scalar(255 ,255, 255));
 
          for (const auto& t : Contours){
              double tArea = contourArea(t);
@@ -97,24 +100,51 @@ int main() {
 
          }
 
+         Mat hsv;
+         cvtColor(frame,hsv,COLOR_BGR2HSV);
+         int histSize[] = {180};
+         int channels[] = {0};
+         float range_[] = {0, 180};
+         const float* range[] = {range_};
+
+         int NumberOfPeople = 0;
          for (People i : DetectedPeople){
+
+             Mat roi, hsv_roi, mask, roi_hist, dst;
+
              Rect trackedWindows = i.getPos();
-             Mat roi, hsv_roi, mask, roi_hist;
-             hsv_roi = gray(trackedWindows);
+
+             //Region Of Interest
+             roi = frame(trackedWindows);
+
+             //Change RGB to HSV
+             cvtColor(roi, hsv_roi, COLOR_BGR2HSV);
+
+             //DO inRanger function stored in [mask]
              inRange(hsv_roi, Scalar(0, 60, 32), Scalar(180, 255, 255), mask);
              //bitwise_not(mask,mask);
 
-             int histSize[] = {180};
-             int channels[] = {0};
-
-             float range_[] = {0, 180};
-             const float* range[] = {range_};
+             //Calc histogram stored in [hist]
              calcHist(&hsv_roi, 1, channels, mask, roi_hist, 1, histSize, range);
              normalize(roi_hist, roi_hist, 0, 255, NORM_MINMAX);
-             TermCriteria term_crit(TermCriteria::EPS | TermCriteria::COUNT, 10, 1);
-             for(int j = 0;j < DetectedContours.size();j ++){
 
+             //Back projection stored in [dst]
+             TermCriteria term_crit(TermCriteria::EPS | TermCriteria::COUNT, 10, 1);
+             calcBackProject(&hsv, 1, channels, roi_hist, dst, range);
+
+             //CamShift algorithm stored in [rot_rect]
+             RotatedRect rot_rect = CamShift(dst, trackedWindows, term_crit);
+
+             Point2f points[4];
+             rot_rect.points(points);
+             for (int j = 0; j < 4; j++)
+                 line(frame, points[j], points[(j+1)%4], 255, 2);
+
+             for(auto j = DetectedContours.begin();j != DetectedContours.end();){
+                 const auto tCon = *j;
+                 
              }
+
          }
 
          for (const auto& tCon : DetectedContours){
@@ -126,7 +156,6 @@ int main() {
         
         //while ((char)waitKey(1000) != 'q') break;
         if(waitKey(33)){};
-        
     }
 
       return 0;
