@@ -21,7 +21,7 @@ using namespace std;
 using namespace cv;
 
 
-double MinPeopelArea = 0;
+double MinPeopelArea = 500;
 double MaxPeopleArea = 10000;
 
 list <Rect> DetectedContours;
@@ -92,9 +92,9 @@ int main() {
         //inRange(gray, Scalar(0, 60, 32), Scalar(180, 255, 255), gray);
         //drawContours(frame, Contours, -1, Scalar(255 ,255, 255));
 
-         for (const auto& t : Contours){
+         for (const auto& t : Contours) {
              double tArea = contourArea(t);
-             if(tArea < MinPeopelArea and tArea > MaxPeopleArea)
+             if(tArea < MinPeopelArea or tArea > MaxPeopleArea)
                  continue;
              DetectedContours.push_back(boundingRect(t));
 
@@ -108,7 +108,7 @@ int main() {
          const float* range[] = {range_};
 
          int NumberOfPeople = 0;
-         for (People i : DetectedPeople){
+         for (People& i : DetectedPeople){
 
              Mat roi, hsv_roi, mask, roi_hist, dst;
 
@@ -142,9 +142,12 @@ int main() {
 
              for(auto j = DetectedContours.begin();j != DetectedContours.end();){
                  const auto tCon = *j;
-                 
+                 if(i.JudgeIn(tCon)){
+                     i.UPDATE(tCon);
+                     j = DetectedContours.erase(j);
+                 }
+                 else j++;
              }
-
          }
 
          for (const auto& tCon : DetectedContours){

@@ -15,17 +15,25 @@ typedef std::vector<Point> CONTOUR;
 class People {
 private:
     double Area;
-    Rect Place;
+    Rect ROI;
     Point Center;
     Point PreCenter;
+    Point Speed;
+
     Mat roi_hist;
     void updateCenter();
+
 public:
     People(const CONTOUR&);
     People(const Rect&);
 
+
     void setHist(const Mat&);
-    void setPos(Rect);
+    void setPos(const Rect&);
+
+    void UPDATE(const Rect&);
+
+    bool JudgeIn(const Rect&);
 
     Mat getHist();
     Rect getPos();

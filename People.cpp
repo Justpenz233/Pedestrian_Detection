@@ -5,13 +5,13 @@
 #include "People.h"
 #include <utility>
 
-void People::setPos(Rect pos) {
-    Place = std::move(pos);
+void People::setPos(const Rect& pos) {
+    ROI = std::move(pos);
     updateCenter();
 }
 
 Rect People::getPos() {
-    return Place;
+    return ROI;
 }
 
 double People::getArea() {
@@ -23,19 +23,21 @@ Point People::getCenter() {
 }
 
 People::People(const CONTOUR& t) {
-    Place = boundingRect(t);
+    Center = Point(0,0);
+    ROI = boundingRect(t);
     Area = contourArea(t);
     updateCenter();
 }
 
 void People::updateCenter() {
     PreCenter = Center;
-    Center.x = Place.x + Place.width / 2.0;
-    Center.y = Place.y + Place.height / 2.0;
+    Center.x = ROI.x + ROI.width / 2.0;
+    Center.y = ROI.y + ROI.height / 2.0;
+    Speed = Center - PreCenter;
 }
 
 People::People(const Rect& t) {
-    Place = t;
+    ROI = t;
     Area = t.area();
 
 }
@@ -46,4 +48,15 @@ void People::setHist(const Mat& t) {
 
 Mat People::getHist() {
     return roi_hist;
+}
+
+bool People::JudgeIn(const Rect& R) {
+    Rect t1 = R & ROI;
+    return (t1.area() * 3.0 >= ROI.area()) or (t1.area() * 1.5 >= R.area());
+}
+
+void People::UPDATE(const Rect & R) {
+    ROI = R;
+    Area = R.area();
+    updateCenter();
 }
