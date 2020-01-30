@@ -6,5 +6,5 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(OpenCV)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
-add_executable(President_Detection main.cpp People.cpp People.h)
+add_executable(President_Detection main.cpp People.cpp People.h Parameter.h)
 target_link_libraries(President_Detection ${OpenCV_LIBS})

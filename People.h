@@ -5,9 +5,11 @@
 #ifndef PRESIDENT_DETECTION_PEOPLE_H
 #define PRESIDENT_DETECTION_PEOPLE_H
 
+
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <iostream>
+//#include "Parameter.h"
 using namespace cv;
 
 typedef std::vector<Point> CONTOUR;
