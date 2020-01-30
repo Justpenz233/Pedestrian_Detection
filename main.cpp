@@ -11,8 +11,8 @@
 #include <list>
 #include <string>
 #include <vector>
-#include <opencv2/opencv.hpp>
-#include <opencv2/video/background_segm.hpp>
+#include <opencv4/opencv2/opencv.hpp>
+#include <opencv4/opencv2/video/background_segm.hpp>
 #include "People.h"
 
 
@@ -20,6 +20,8 @@
 
 using namespace std;
 using namespace cv;
+
+int People::COUNT = 0;
 
 int toleranceRange = 50;  // use for error calculation
 int toleranceCount = 10; // maximum number of frame an object need to present in order to be accepted
@@ -48,7 +50,7 @@ int main() {
     namedWindow("ROI", WINDOW_AUTOSIZE);
 
     VideoCapture cap;
-    cap.open(MakePath("demo.mp4"));
+    cap.open(MakePath("1.mp4"));
 
     auto fgmask = createBackgroundSubtractorMOG2(100);
 
@@ -152,6 +154,9 @@ int main() {
             Point tPos = Point(tx, ty);
 
             bool findFlag = false;
+
+            //Matching
+            //ToDo (Add tolerance Count)
             for (auto j : DetectedContours) {
                 Rect t = j;
                 if(
@@ -166,15 +171,16 @@ int main() {
                     break;
                 }
             }
+
+           //Deleted People
             if (not findFlag) {
                 cout << "Not found" << endl;
                 i = DetectedPeople.erase(i);
-            } else {
+            }
+            else {
                 cout << "Found" << endl;
-
                 //Draw result with MeanShift
                 rectangle(imFinal, trackedWindows, 255, 2);
-
 
                 /*
                  * Draw result with CamShift
@@ -184,8 +190,25 @@ int main() {
                 for (int j = 0; j < 4; j++)
                     line(imFinal, points[j], points[(j + 1) % 4], 255, 2);
                 */
+
                 i++;
             }
+
+            for(auto j : DetectedPeople){
+                string messg = to_string(j.ID);
+                messg = messg + ":";
+                Point V = j.Speed;
+                string xV = to_string(V.x);
+                string yV = to_string(V.y);
+                messg = messg + xV + "," + yV;
+
+                Rect t = j.getPos();
+                Point pos;
+                pos.x = t.x;
+                pos.y = t.y + t.height + 5;
+                putText(imFinal,messg,pos,FONT_HERSHEY_COMPLEX,0.5,Scalar(0, 255, 255),2);
+            }
+
         }
 
         for (const auto &tCon : DetectedContours) {
@@ -200,4 +223,5 @@ int main() {
     }
 
     return 0;
+
 }

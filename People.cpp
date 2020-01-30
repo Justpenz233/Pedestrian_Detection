@@ -4,8 +4,10 @@
 
 #include "People.h"
 #include <utility>
+#include <iostream>
 
 void People::setPos(const Rect& pos) {
+    std::cout << COUNT << std::endl;
     ROI = pos;
     updateCenter();
 }
@@ -23,6 +25,8 @@ Point People::getCenter() {
 }
 
 People::People(const CONTOUR& t) {
+    ID = ++ COUNT;
+    std::cout << COUNT << std::endl;
     Center = Point(0,0);
     ROI = boundingRect(t);
     Area = contourArea(t);
@@ -37,6 +41,7 @@ void People::updateCenter() {
 }
 
 People::People(const Rect& t) {
+    ID = ++ COUNT;
     ROI = t;
     Area = t.area();
 

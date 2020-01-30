@@ -5,7 +5,7 @@
 #ifndef PRESIDENT_DETECTION_PARAMETER_H
 #define PRESIDENT_DETECTION_PARAMETER_H
 
-#define toleranceRange  50  // use for error calculation
+#define toleranceRange 50  // use for error calculation
 #define toleranceCount 10 // maximum number of frame an object need to present in order to be accepted
 
 #define MinPeopelArea 500

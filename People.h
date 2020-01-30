@@ -7,7 +7,7 @@
 
 
 #include <vector>
-#include <opencv2/opencv.hpp>
+#include <opencv4/opencv2/opencv.hpp>
 #include <iostream>
 //#include "Parameter.h"
 using namespace cv;
@@ -20,12 +20,15 @@ private:
     Rect ROI;
     Point Center;
     Point PreCenter;
-    Point Speed;
+
 
     Mat roi_hist;
     void updateCenter();
 
 public:
+    int ID;
+    Point Speed;
+    static int COUNT;
     People(const CONTOUR&);
     People(const Rect&);
 
