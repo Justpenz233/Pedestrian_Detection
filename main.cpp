@@ -24,8 +24,8 @@ using namespace cv;
 int toleranceRange = 50;  // use for error calculation
 int toleranceCount = 10; // maximum number of frame an object need to present in order to be accepted
 
-double MinPeopelArea = 500;
-double MaxPeopleArea = 5000;
+double MinPeopelArea = 2000;
+double MaxPeopleArea = 15000;
 
 list<Rect> DetectedContours;
 list<People> DetectedPeople;
@@ -51,7 +51,6 @@ int main() {
     cap.open(MakePath("demo.mp4"));
 
     auto fgmask = createBackgroundSubtractorMOG2(100);
-
 
 
     while (cap.isOpened()) {
@@ -114,7 +113,7 @@ int main() {
 
         int NumberOfPeople = 0;
         Mat imFinal;
-        copyTo(frame,imFinal,Mat());
+        copyTo(frame, imFinal, Mat());
 
         for (auto i = DetectedPeople.begin(); i != DetectedPeople.end();) {
 
@@ -124,14 +123,14 @@ int main() {
 
             //Region Of Interest
             roi = frame(trackedWindows);
-            imshow("ROI",roi);
+            imshow("ROI", roi);
             //Change RGB to HSV
             cvtColor(roi, hsv_roi, COLOR_BGR2HSV);
 
             //DO inRanger function stored in [mask]
             inRange(hsv_roi, Scalar(0, 60, 32), Scalar(180, 255, 255), mask);
             //bitwise_not(mask, mask);
-            imshow("Mask",mask);
+            imshow("Mask", mask);
 
 
             //Calc histogram stored in [hist]
@@ -143,10 +142,14 @@ int main() {
             calcBackProject(&hsv, 1, channels, roi_hist, dst, range);
 
             //CamShift algorithm stored in [rot_rect]
-            RotatedRect rot_rect = CamShift(dst, trackedWindows, term_crit);
+            //RotatedRect rot_rect = CamShift(dst, trackedWindows, term_crit);
+
+            //MeanShift algorithm stored in [trackedWindows]
+            meanShift(dst, trackedWindows, term_crit);
+
 
             bool findFlag = false;
-            for (auto j = DetectedContours.begin(); j != DetectedContours.end(); j ++) {
+            for (auto j = DetectedContours.begin(); j != DetectedContours.end(); j++) {
                 const auto tCon = *j;
                 if (i->JudgeIn(tCon)) {
                     findFlag = true;
@@ -155,14 +158,22 @@ int main() {
                     break;
                 }
             }
-            if(not findFlag){
+            if (not findFlag) {
+                cout << "Not found" << endl;
                 i = DetectedPeople.erase(i);
-            }
-            else{
+            } else {
+                cout << "Found" << endl;
+
+                //Draw result with MeanShift
+                rectangle(imFinal, trackedWindows, 255, 2);
+                /*
+                 * Draw result with CamShift
+                 *
                 Point2f points[4];
                 rot_rect.points(points);
                 for (int j = 0; j < 4; j++)
                     line(imFinal, points[j], points[(j + 1) % 4], 255, 2);
+                */
                 i++;
             }
         }
