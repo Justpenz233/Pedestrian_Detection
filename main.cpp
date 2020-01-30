@@ -147,14 +147,22 @@ int main() {
             //MeanShift algorithm stored in [trackedWindows]
             meanShift(dst, trackedWindows, term_crit);
 
+            int tx = int(trackedWindows.x + trackedWindows.width / 2.0);
+            int ty = int(trackedWindows.y + trackedWindows.height / 2.0);
+            Point tPos = Point(tx, ty);
 
             bool findFlag = false;
-            for (auto j = DetectedContours.begin(); j != DetectedContours.end(); j++) {
-                const auto tCon = *j;
-                if (i->JudgeIn(tCon)) {
+            for (auto j : DetectedContours) {
+                Rect t = j;
+                if(
+                        tPos.x < int(j.x + j.width + toleranceRange) and
+                        tPos.x > int(j.x - toleranceRange) and
+                        tPos.y < int(j.y + j.height + toleranceRange) and
+                        tPos.y > int(j.y - toleranceRange)
+                ){
+                    i->UPDATE(j);
+                    DetectedContours.remove(j);
                     findFlag = true;
-                    i->UPDATE(tCon);
-                    j = DetectedContours.erase(j);
                     break;
                 }
             }
@@ -166,6 +174,8 @@ int main() {
 
                 //Draw result with MeanShift
                 rectangle(imFinal, trackedWindows, 255, 2);
+
+
                 /*
                  * Draw result with CamShift
                  *

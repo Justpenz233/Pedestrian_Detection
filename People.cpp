@@ -6,7 +6,7 @@
 #include <utility>
 
 void People::setPos(const Rect& pos) {
-    ROI = std::move(pos);
+    ROI = pos;
     updateCenter();
 }
 
@@ -55,7 +55,7 @@ bool People::JudgeIn(const Rect& R) {
     return (t1.area() * 3.0 >= ROI.area()) or (t1.area() * 1.5 >= R.area());
 }
 
-void People::UPDATE(const Rect & R) {
+void People::UPDATE(Rect R) {
     ROI = R;
     Area = R.area();
     updateCenter();

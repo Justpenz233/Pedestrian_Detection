@@ -33,7 +33,7 @@ public:
     void setHist(const Mat&);
     void setPos(const Rect&);
 
-    void UPDATE(const Rect&);
+    void UPDATE(Rect);
 
     bool JudgeIn(const Rect&);
 
