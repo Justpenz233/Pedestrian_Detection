@@ -7,7 +7,6 @@
             "args": [
                 "-g",
                 "${file}",
-                "${fileDirname}/People.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-std=c++11",
