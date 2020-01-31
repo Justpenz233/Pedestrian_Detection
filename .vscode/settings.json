@@ -98,5 +98,9 @@
         "hash_set": "cpp",
         "rope": "cpp",
         "slist": "cpp"
-    }
+    },
+    "cSpell.words": [
+        "fourcc",
+        "imshow"
+    ]
 }

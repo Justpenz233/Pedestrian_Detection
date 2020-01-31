@@ -16,17 +16,17 @@
 #include "People.h"
 
 
-#define CurrentPath "/Users/makik/CLionProjects/President_Detection/"
+#define CurrentPath "/Users/makik/Desktop/President_Detection/"
 
 using namespace std;
 using namespace cv;
 
 int People::COUNT = 0;
 
-int toleranceRange = 50;  // use for error calculation
+int toleranceRange = 200;  // use for error calculation
 int toleranceCount = 10; // maximum number of frame an object need to present in order to be accepted
 
-double MinPeopelArea = 2000;
+double MinPeopleArea = 2000;
 double MaxPeopleArea = 15000;
 
 list<Rect> DetectedContours;
@@ -50,14 +50,20 @@ int main() {
     namedWindow("ROI", WINDOW_AUTOSIZE);
 
     VideoCapture cap;
-    cap.open(MakePath("1.mp4"));
+    cap.open(MakePath("demo.mp4"));
+
+    Size size = Size(cap.get(CAP_PROP_FRAME_WIDTH), cap.get(CAP_PROP_FRAME_HEIGHT));
+    int myFourCC = VideoWriter::fourcc('m', 'p', '4', 'v');//mp4
+    double rate = cap.get(CAP_PROP_FPS);
+    VideoWriter writer("Result.mp4", myFourCC, rate, size, true);
+
 
     auto fgmask = createBackgroundSubtractorMOG2(100);
 
 
     while (cap.isOpened()) {
         Mat frame;
-        NextFram(cap, 0.05);//每0.1秒处理一次
+        //NextFram(cap, 0.05);//每0.1秒处理一次
 
         cap >> frame;
 
@@ -100,7 +106,7 @@ int main() {
         for (const auto &t : Contours) {
             Rect R = boundingRect(t);
             double tArea = R.area();
-            if (tArea < MinPeopelArea or tArea > MaxPeopleArea)
+            if (tArea < MinPeopleArea or tArea > MaxPeopleArea)
                 continue;
             DetectedContours.push_back(boundingRect(t));
 
@@ -175,7 +181,11 @@ int main() {
            //Deleted People
             if (not findFlag) {
                 cout << "Not found" << endl;
-                i = DetectedPeople.erase(i);
+                if(i->MissCount > toleranceCount)
+                    i = DetectedPeople.erase(i);
+                else
+                    i->MissCount ++;
+                
             }
             else {
                 cout << "Found" << endl;
@@ -211,17 +221,17 @@ int main() {
 
         }
 
-        for (const auto &tCon : DetectedContours) {
+        for (const auto &tCon : DetectedContours) 
             DetectedPeople.emplace_back(People(tCon));
-        }
 
+        writer << imFinal;
         imshow("Frame", imFinal);
 
 
         //while ((char)waitKey(1000) != 'q') break;
         if (waitKey(33)) {};
     }
-
+    writer.release();
     return 0;
 
 }

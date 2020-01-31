@@ -27,6 +27,7 @@ private:
 
 public:
     int ID;
+    int MissCount;
     Point Speed;
     static int COUNT;
     People(const CONTOUR&);

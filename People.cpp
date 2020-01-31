@@ -25,6 +25,7 @@ Point People::getCenter() {
 }
 
 People::People(const CONTOUR& t) {
+    MissCount = 0;
     ID = ++ COUNT;
     std::cout << COUNT << std::endl;
     Center = Point(0,0);
@@ -41,6 +42,7 @@ void People::updateCenter() {
 }
 
 People::People(const Rect& t) {
+    MissCount = 0;
     ID = ++ COUNT;
     ROI = t;
     Area = t.area();
