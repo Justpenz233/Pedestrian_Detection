@@ -102,5 +102,6 @@
     "cSpell.words": [
         "fourcc",
         "imshow"
-    ]
+    ],
+    "python.pythonPath": "/usr/local/bin/python3"
 }
