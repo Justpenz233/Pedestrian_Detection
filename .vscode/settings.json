@@ -103,5 +103,5 @@
         "fourcc",
         "imshow"
     ],
-    "python.pythonPath": "/usr/local/bin/python3"
+    "python.pythonPath": "/Users/makik/Desktop/President_Detection/venv/bin/python3.7"
 }
