@@ -30,23 +30,9 @@ def toList(R: tuple):
     return result
 
 
-def RectContin(r1, r2):
-    r1 = toList(r1)
-    r2 = toList(r2)
-
-    R1Top = r1[0] + r1[2]
-    R1Right = r1[1] + r1[3]
-
-    R2Top = r2[0] + r2[2]
-    R2Right = r2[1] + r2[3]
-
-    if not R1Top > R2Top:
-        return False
-
 
 def CalcCenter(Rect):
     """
-
     :type Rect: tuple
     """
     x = int(Rect[0] + Rect[2] * 0.5)
@@ -61,7 +47,8 @@ class People:
         self.Center = CalcCenter(Rect)
         self.preCenter = (0, 0)
         self.speed = [0, 0]
-        self.tracker = cv.TrackerKCF_create()
+        # self.tracker = cv.TrackerKCF_create()
+        self.tracker = cv.TrackerCSRT_create()
         self.tracker.init(frame, Rect)
         self.fault = 0
 
@@ -88,32 +75,67 @@ def NextSecond(cap, Second, FPS):
     for i in range(int(FPS * Second)):
         cap.read()
 
+DisplayVideo = True
+SaveVideo = True
+TestMode = False
 
 if __name__ == '__main__':
 
-    cv.namedWindow("FRAME")
-    cap = cv.VideoCapture(mk_path("demo.mp4"))
+    if DisplayVideo:
+        cv.namedWindow("FRAME")
+    cap = cv.VideoCapture("demo.mp4")
     hog = cv.HOGDescriptor()
     hog.setSVMDetector(cv.HOGDescriptor_getDefaultPeopleDetector())
+
+
 
     FPS = cap.get(cv.CAP_PROP_FPS)
     Height = cap.get(cv.CAP_PROP_FRAME_HEIGHT)
     Width = cap.get(cv.CAP_PROP_FRAME_WIDTH)
 
+    if SaveVideo:
+        fourcc = cv.VideoWriter_fourcc(*'XVID')  # 保存视频的编码
+        out = cv.VideoWriter('output.avi', fourcc, FPS, (int(Width), int(Height)))
+
+    HASDONE = 0
+
     SETWidth = 600
     Pedestrian = []
     while True:
+        HASDONE += 1
+        if not DisplayVideo:
+            print(HASDONE)
         isOpen, frame = cap.read()
         # frame = cv.resize(frame, (SETWidth, int(SETWidth * Height / Width)))
         if not isOpen:
             break
-        NextSecond(cap, 0.05, FPS)
-        rects, wei = hog.detectMultiScale(frame, winStride=(4, 4), padding=(8, 8), scale=1.03)
+
+        if TestMode:
+            NextSecond(cap, 0.2, FPS)
+
+        rects, wei = hog.detectMultiScale(frame, winStride=(20, 20), padding=(8, 8), scale=1.005)
 
         tR = []
         for i in rects:
             tR.append(i)
         rects = tR
+
+        for i in range(len(rects)):
+            if i >= len(rects):
+                break
+            Ri = rects[i]
+            Ai = Ri[2] * Ri[3]
+            findFlag = True
+            while findFlag:
+                for j in range(i + 1, len(rects)):
+                    Rj = rects[j]
+                    Aj = Rj[2] * Rj[3]
+                    Area = calc_area(Ri, Rj)
+                    if Area > Ai * 0.5 or Area > Aj * 0.5:
+                        rects.pop(j)
+                        findFlag = True
+                        break
+                findFlag = False
 
         for tP in Pedestrian:
             track_ok, bbox = tP.tracker.update(frame)
@@ -126,14 +148,38 @@ if __name__ == '__main__':
 
         for tP in Pedestrian:
             pos = tP.Center
-            for index, dC in enumerate(rects):
-                if dC[0] - toleranceRange < pos[0] < dC[0] + dC[2] + toleranceRange \
-                        and dC[1] - toleranceRange < pos[1] < dC[1] + dC[3] + toleranceRange:
-                    rects.pop(index)
+            FindFlag = True
+            while FindFlag :
+                for index, dC in enumerate(rects):
+                    if dC[0] - toleranceRange < pos[0] < dC[0] + dC[2] + toleranceRange \
+                            and dC[1] - toleranceRange < pos[1] < dC[1] + dC[3] + toleranceRange:
+                        rects.pop(index)
+                        findFlag = True
+                        break
+                FindFlag = False
+
 
         for R in rects:
             tR = tuple(R)
             Pedestrian.append(People(tR, frame))
+
+        for i in range(len(Pedestrian)):
+            if i >= len(Pedestrian):
+                break
+            Ri = Pedestrian[i].Rect
+            Ai = Ri[2] * Ri[3]
+            findFlag = True
+            while findFlag:
+                for j in range(i + 1, len(Pedestrian)):
+                    Rj = Pedestrian[j].Rect
+                    Aj = Rj[2] * Rj[3]
+                    Area = calc_area(Ri, Rj)
+                    if Area > Ai * 0.8 or Area > Aj * 0.8:
+                        Pedestrian.pop(j)
+                        findFlag = True
+                        break
+                findFlag = False
+
 
         for tP in Pedestrian:
             (x, y, w, h) = tP.Rect
@@ -143,10 +189,22 @@ if __name__ == '__main__':
             h = int(h)
             cv.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
             cv.circle(frame, tP.Center, 3, (0, 0, 0), -1)
+            font = cv.FONT_HERSHEY_SIMPLEX
+            messg = "Speed:"
+            messg = messg + str(tP.speed[0]) + "," + str(tP.speed[1])
+            frame = cv.putText(frame, messg, (x, y), font, 1.2, (255, 255, 255), 2)
 
+        font = cv.FONT_HERSHEY_SIMPLEX
+        messg = "Number:" + str(len(Pedestrian))
+        frame = cv.putText(frame, messg, (0, 40), font, 1.2, (255, 255, 255), 2)
         # for (x, y, w, h) in rects:
         #     cv.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-        cv.imshow("FRAME", frame)
-        if cv.waitKey(1) & 0xff == 27:
-            break
+
+        if DisplayVideo:
+            cv.imshow("FRAME", frame)
+            if cv.waitKey(1) & 0xff == 27:
+                break
+
+        if SaveVideo:
+            out.write(frame)
